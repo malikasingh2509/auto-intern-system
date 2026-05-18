@@ -1,0 +1,41 @@
+# ========================
+# FRONTEND
+# ========================
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+
+# ========================
+# BACKEND
+# ========================
+backend/target/
+backend/.env
+backend/uploads/
+backend/*.log
+backend/backend.log
+
+# Sensitive config — use application-prod.properties for production
+# backend/src/main/resources/application.properties
+
+# ========================
+# DATABASE
+# ========================
+*.sql.bak
+database_schema_backup.sql
+
+# ========================
+# SYSTEM
+# ========================
+.DS_Store
+Thumbs.db
+*.class
+*.log
+*.jar
+*.war
+*.iml
+.idea/
+*.swp
+*.swo
+.vscode/settings.json
