@@ -67,6 +67,12 @@ function ResetPassword() {
                 body: JSON.stringify({ email, otp: otp.trim(), newPassword })
             });
 
+            if (!response.ok) {
+                toast.error("Server error. Please try again later.");
+                setLoading(false);
+                return;
+            }
+
             const data = await response.text();
 
             if (data === "Password Updated") {
@@ -95,6 +101,10 @@ function ResetPassword() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email })
             });
+            if (!response.ok) {
+                toast.error("Server error. Please try again later.");
+                return;
+            }
             const data = await response.text();
             if (data === "OTP Sent") {
                 toast.success("New OTP sent to your email!");

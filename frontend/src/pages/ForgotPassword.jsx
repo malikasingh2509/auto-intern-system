@@ -31,6 +31,12 @@ function ForgotPassword() {
                 body: JSON.stringify({ email: email.trim() })
             });
 
+            if (!response.ok) {
+                toast.error("Server error. Please try again later.");
+                setLoading(false);
+                return;
+            }
+
             const data = await response.text();
 
             if (data === "OTP Sent") {
