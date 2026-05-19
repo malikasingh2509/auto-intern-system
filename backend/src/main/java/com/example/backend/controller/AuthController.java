@@ -73,14 +73,24 @@ public class AuthController {
             return "User Not Found";
         }
         
-        // Generate 6 digit OTP
-        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        // Generate 6 digit OTP using SecureRandom for better randomness
+        String otp = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
         user.setResetOtp(otp);
         user.setResetOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
         repository.save(user);
-        
-        emailService.sendEmail(email, "Reset Your Password - AI Career Dashboard", "Hello " + user.getName() + ",\n\nYour OTP to reset your password is: " + otp + "\n\nThis OTP is valid for 10 minutes.\n\nBest,\nAI Career Team");
-        
+
+        String emailBody =
+            "Hello " + user.getName() + ",\n\n" +
+            "You requested a password reset for your AI Career Dashboard account.\n\n" +
+            "Your One-Time Password (OTP) is:\n\n" +
+            "  " + otp + "\n\n" +
+            "This OTP is valid for 10 minutes. Do not share it with anyone.\n\n" +
+            "If you did not request this, please ignore this email — your account is safe.\n\n" +
+            "Best regards,\n" +
+            "AI Career Dashboard Team";
+
+        emailService.sendEmail(email, "Reset Your Password — AI Career Dashboard", emailBody);
+
         return "OTP Sent";
     }
 

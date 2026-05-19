@@ -11,11 +11,14 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @org.springframework.beans.factory.annotation.Value("${spring.mail.username:smalika7489@gmail.com}")
+    private String fromEmail;
+
     public void sendEmail(String to, String subject, String text) {
         java.util.concurrent.CompletableFuture.runAsync(() -> {
             try {
                 SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom("smalika7489@gmail.com");
+                message.setFrom(fromEmail);
                 message.setTo(to);
                 message.setSubject(subject);
                 message.setText(text);
