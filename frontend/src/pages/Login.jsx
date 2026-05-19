@@ -205,6 +205,27 @@ function Login() {
             Login
             </button>
 
+            <p
+                style={{
+                marginTop: "20px",
+                textAlign: "center",
+                color: "white"
+                }}
+            >
+                Don't have an account?
+
+                <Link
+                to="/register"
+                style={{
+                    color: "#38bdf8",
+                    marginLeft: "8px",
+                    textDecoration: "none"
+                }}
+                >
+                Register
+                </Link>
+            </p>
+
         </form>
 
         </div>
