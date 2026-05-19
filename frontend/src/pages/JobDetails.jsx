@@ -59,6 +59,9 @@ function JobDetails({ userId, matchedJobs }) {
       });
       if (response.ok) {
         alert("Successfully applied and added to Tracker!");
+        if (job.applyLink) {
+          window.open(job.applyLink, "_blank");
+        }
         navigate("/tracker");
       }
     } catch (error) {

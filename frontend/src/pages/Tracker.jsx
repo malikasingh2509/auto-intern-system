@@ -239,7 +239,7 @@ function Tracker({ userId }) {
     } catch (e) { console.error(e); }
   };
 
-  if (loading) return <div style={{ textAlign: "center", padding: "100px", color: "white" }}>Loading Kanban Board...</div>;
+  if (loading) return <div style={{ textAlign: "center", padding: "100px", color: "white" }}>Loading Tracker...</div>;
 
   const filtered = applications.filter(a => {
     const t = searchTerm.toLowerCase();
@@ -257,7 +257,7 @@ function Tracker({ userId }) {
     <div style={{ paddingBottom: "60px" }}>
       {/* Page Header */}
       <div style={{ marginBottom: "32px" }}>
-        <h1 style={{ fontSize: "32px", fontWeight: "800", color: "white", margin: "0 0 8px" }}>Application Kanban</h1>
+        <h1 style={{ fontSize: "32px", fontWeight: "800", color: "white", margin: "0 0 8px" }}>Application Tracker</h1>
         <p style={{ color: "#94a3b8", margin: "0 0 20px" }}>Drag cards between columns to track your hiring pipeline.</p>
 
         {/* Stats Row */}

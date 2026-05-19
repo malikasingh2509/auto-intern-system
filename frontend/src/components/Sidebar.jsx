@@ -67,7 +67,7 @@ function Sidebar() {
         <div style={labelStyle} className="sidebar-label">Career Tracker</div>
 
         <Link to="/tracker" style={getLinkStyle("/tracker")} className={location.pathname === "/tracker" ? "active" : ""}>
-          🗂️ Kanban Board
+          🗂️ Application Tracker
         </Link>
 
         <Link to="/applied" style={getLinkStyle("/applied")} className={location.pathname === "/applied" ? "active" : ""}>

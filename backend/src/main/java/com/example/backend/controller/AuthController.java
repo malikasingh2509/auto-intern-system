@@ -4,6 +4,7 @@ import com.example.backend.model.UserProfile;
 import com.example.backend.repository.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import com.example.backend.service.EmailService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,6 +13,9 @@ public class AuthController {
 
     @Autowired
     private UserProfileRepository repository;
+
+    @Autowired
+    private EmailService emailService;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -24,6 +28,9 @@ public class AuthController {
         // Hash the password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         repository.save(user);
+        
+        emailService.sendEmail(user.getEmail(), "Welcome to AI Career Dashboard!", "Hello " + user.getName() + ",\n\nYour account has been created successfully. Welcome to your AI-powered career assistant platform!\n\nBest,\nAI Career Team");
+        
         return "Account Created";
     }
 
@@ -51,6 +58,10 @@ public class AuthController {
             }
         }
 
-        return matches ? "Login Success" : "Invalid Password";
+        if (matches) {
+            emailService.sendEmail(existingUser.getEmail(), "Login Successful - AI Career", "Hello " + existingUser.getName() + ",\n\nYou have successfully logged in to your AI Career Dashboard. If this was not you, please secure your account immediately.\n\nBest,\nAI Career Team");
+            return "Login Success";
+        }
+        return "Invalid Password";
     }
 }

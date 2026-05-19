@@ -33,6 +33,9 @@ public class ApplicationTrackerService {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
+    @Autowired
+    private EmailService emailService;
+
     public Application createApplication(Long userId, Application reqApp) {
         UserProfile user = userProfileRepository.findById(userId).orElse(null);
         if (user == null) return null;
@@ -42,7 +45,9 @@ public class ApplicationTrackerService {
         if (reqApp.getStatus() == null) {
             reqApp.setStatus("Applied");
         }
-        return applicationRepository.save(reqApp);
+        Application saved = applicationRepository.save(reqApp);
+        emailService.sendEmail(user.getEmail(), "Application Submitted: " + saved.getJobTitle(), "Hello " + user.getName() + ",\n\nYou have successfully applied for the " + saved.getJobTitle() + " position at " + saved.getCompany() + ".\n\nGood luck!\nAI Career Team");
+        return saved;
     }
 
     public List<Application> getApplicationsByUser(Long userId) {
@@ -72,6 +77,9 @@ public class ApplicationTrackerService {
                 
                 // 3. Push to WebSocket
                 messagingTemplate.convertAndSend("/topic/notifications/" + app.getUser().getId(), notif);
+                
+                // 4. Send Email Notification
+                emailService.sendEmail(app.getUser().getEmail(), "Status Update: " + app.getJobTitle(), "Hello " + app.getUser().getName() + ",\n\nYour application for " + app.getJobTitle() + " at " + app.getCompany() + " has moved to the " + newStatus + " stage.\n\nBest,\nAI Career Team");
             }
 
             return app;
