@@ -89,7 +89,13 @@ public class AuthController {
             "Best regards,\n" +
             "AI Career Dashboard Team";
 
-        emailService.sendEmail(email, "Reset Your Password — AI Career Dashboard", emailBody);
+        try {
+            emailService.sendEmailSync(email, "Reset Your Password — AI Career Dashboard", emailBody);
+        } catch (Exception e) {
+            System.err.println("[ForgotPassword] Email send failed: " + e.getMessage());
+            // OTP is saved in DB — return a descriptive error so user knows email failed
+            return "Email Failed: " + e.getMessage();
+        }
 
         return "OTP Sent";
     }

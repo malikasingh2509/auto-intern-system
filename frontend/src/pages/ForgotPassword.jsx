@@ -47,6 +47,10 @@ function ForgotPassword() {
                 navigate(`/reset-password?email=${encodeURIComponent(email.trim())}`);
             } else if (data === "User Not Found") {
                 toast.error("No account found with this email address.");
+            } else if (data.startsWith("Email Failed:")) {
+                // Surface the real SMTP error so we can debug it
+                toast.error("Email delivery failed. Check Render environment variables.");
+                console.error("SMTP error from backend:", data);
             } else {
                 toast.error(data);
             }
