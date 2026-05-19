@@ -1,43 +1,92 @@
 package com.example.backend.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+/**
+ * Email service using Brevo (Sendinblue) HTTP API.
+ * Works on Render free tier — no SMTP ports needed, uses HTTPS only.
+ *
+ * Free tier: 300 emails/day — https://app.brevo.com
+ */
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${brevo.api.key:PLACEHOLDER}")
+    private String brevoApiKey;
 
-    @org.springframework.beans.factory.annotation.Value("${spring.mail.username:smalika7489@gmail.com}")
+    @Value("${brevo.from.email:smalika7489@gmail.com}")
     private String fromEmail;
 
-    // Async — fire-and-forget (used for welcome / login notifications)
+    @Value("${brevo.from.name:AI Career Dashboard}")
+    private String fromName;
+
+    private static final String BREVO_URL = "https://api.brevo.com/v3/smtp/email";
+
+    // Async — fire-and-forget (welcome / login notifications)
     public void sendEmail(String to, String subject, String text) {
         java.util.concurrent.CompletableFuture.runAsync(() -> {
             try {
                 sendSync(to, subject, text);
             } catch (Exception e) {
-                System.err.println("[EmailService] FAILED to send email to " + to + ": " + e.getMessage());
-                e.printStackTrace();
+                System.err.println("[EmailService] ASYNC send failed to " + to + ": " + e.getMessage());
             }
         });
     }
 
-    // Synchronous — throws exception so caller can surface the error (used for OTP)
+    // Synchronous — throws so caller can surface the error (OTP flow)
     public void sendEmailSync(String to, String subject, String text) throws Exception {
         sendSync(to, subject, text);
     }
 
     private void sendSync(String to, String subject, String text) throws Exception {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(text);
-        mailSender.send(message);
+        if ("PLACEHOLDER".equals(brevoApiKey)) {
+            throw new Exception("BREVO_API_KEY environment variable is not set on Render.");
+        }
+
+        // Build JSON payload for Brevo API
+        String toName = to.split("@")[0];
+        // Escape text for JSON
+        String safeText = text
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r");
+        String safeSubject = subject.replace("\"", "\\\"");
+        String safeToName  = toName.replace("\"", "\\\"");
+        String safeFrom    = fromEmail.replace("\"", "\\\"");
+        String safeFromName = fromName.replace("\"", "\\\"");
+
+        String jsonBody = "{"
+            + "\"sender\":{\"name\":\"" + safeFromName + "\",\"email\":\"" + safeFrom + "\"},"
+            + "\"to\":[{\"email\":\"" + to + "\",\"name\":\"" + safeToName + "\"}],"
+            + "\"subject\":\"" + safeSubject + "\","
+            + "\"textContent\":\"" + safeText + "\""
+            + "}";
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(BREVO_URL))
+            .header("accept", "application/json")
+            .header("api-key", brevoApiKey)
+            .header("content-type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+            .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        int statusCode = response.statusCode();
+        System.out.println("[EmailService] Brevo response " + statusCode + " to " + to + ": " + response.body());
+
+        if (statusCode < 200 || statusCode >= 300) {
+            throw new Exception("Brevo API returned HTTP " + statusCode + ": " + response.body());
+        }
+
         System.out.println("[EmailService] Email sent successfully to " + to);
     }
 }
