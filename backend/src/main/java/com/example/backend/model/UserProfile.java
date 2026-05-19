@@ -89,4 +89,13 @@ public class UserProfile {
 
     public String getSalaryExpectations() { return salaryExpectations; }
     public void setSalaryExpectations(String salaryExpectations) { this.salaryExpectations = salaryExpectations; }
+
+    private String resetOtp;
+    private java.time.LocalDateTime resetOtpExpiry;
+
+    public String getResetOtp() { return resetOtp; }
+    public void setResetOtp(String resetOtp) { this.resetOtp = resetOtp; }
+
+    public java.time.LocalDateTime getResetOtpExpiry() { return resetOtpExpiry; }
+    public void setResetOtpExpiry(java.time.LocalDateTime resetOtpExpiry) { this.resetOtpExpiry = resetOtpExpiry; }
 }

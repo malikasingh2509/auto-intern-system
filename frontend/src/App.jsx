@@ -13,6 +13,8 @@ import Profile from "./pages/Profile";
 import Applied from "./pages/Applied";
 import Tracker from "./pages/Tracker";
 import JobDetails from "./pages/JobDetails";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { useLocation } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Header from "./components/Header";
@@ -197,7 +199,9 @@ const handleSubmit = async (e) => {
   const hideSidebar =
     location.pathname === "/" ||
     location.pathname === "/login" ||
-    location.pathname === "/register";
+    location.pathname === "/register" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname === "/reset-password";
 
   return (
   <div className="app-container">
@@ -275,6 +279,8 @@ const handleSubmit = async (e) => {
 
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/dashboard"
         element={

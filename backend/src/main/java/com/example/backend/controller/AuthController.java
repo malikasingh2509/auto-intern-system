@@ -64,4 +64,73 @@ public class AuthController {
         }
         return "Invalid Password";
     }
+
+    @PostMapping("/forgot-password")
+    public String forgotPassword(@RequestBody java.util.Map<String, String> request) {
+        String email = request.get("email");
+        UserProfile user = repository.findByEmail(email);
+        if (user == null) {
+            return "User Not Found";
+        }
+        
+        // Generate 6 digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        user.setResetOtp(otp);
+        user.setResetOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
+        repository.save(user);
+        
+        emailService.sendEmail(email, "Reset Your Password - AI Career Dashboard", "Hello " + user.getName() + ",\n\nYour OTP to reset your password is: " + otp + "\n\nThis OTP is valid for 10 minutes.\n\nBest,\nAI Career Team");
+        
+        return "OTP Sent";
+    }
+
+    @PostMapping("/verify-otp")
+    public String verifyOtp(@RequestBody java.util.Map<String, String> request) {
+        String email = request.get("email");
+        String otp = request.get("otp");
+        
+        UserProfile user = repository.findByEmail(email);
+        if (user == null) {
+            return "User Not Found";
+        }
+        
+        if (user.getResetOtp() == null || !user.getResetOtp().equals(otp)) {
+            return "Invalid OTP";
+        }
+        
+        if (user.getResetOtpExpiry() != null && user.getResetOtpExpiry().isBefore(java.time.LocalDateTime.now())) {
+            return "OTP Expired";
+        }
+        
+        return "OTP Verified";
+    }
+
+    @PostMapping("/reset-password")
+    public String resetPassword(@RequestBody java.util.Map<String, String> request) {
+        String email = request.get("email");
+        String newPassword = request.get("newPassword");
+        String otp = request.get("otp");
+        
+        UserProfile user = repository.findByEmail(email);
+        if (user == null) {
+            return "User Not Found";
+        }
+        
+        if (user.getResetOtp() == null || !user.getResetOtp().equals(otp)) {
+            return "Invalid OTP";
+        }
+        
+        if (user.getResetOtpExpiry() != null && user.getResetOtpExpiry().isBefore(java.time.LocalDateTime.now())) {
+            return "OTP Expired";
+        }
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetOtp(null);
+        user.setResetOtpExpiry(null);
+        repository.save(user);
+        
+        emailService.sendEmail(email, "Password Reset Successful", "Hello " + user.getName() + ",\n\nYour password has been successfully reset.\n\nBest,\nAI Career Team");
+        
+        return "Password Updated";
+    }
 }
