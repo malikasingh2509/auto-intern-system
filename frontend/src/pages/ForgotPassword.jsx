@@ -43,14 +43,15 @@ function ForgotPassword() {
             const data = await response.text();
 
             if (data === "OTP Sent") {
-                toast.success("OTP sent! Check your email inbox.");
+                toast.success("OTP sent! Check your email inbox (and spam folder).");
                 navigate(`/reset-password?email=${encodeURIComponent(email.trim())}`);
             } else if (data === "User Not Found") {
                 toast.error("No account found with this email address.");
             } else if (data.startsWith("Email Failed:")) {
-                // Surface the real SMTP error so we can debug it
-                toast.error("Email delivery failed. Check Render environment variables.");
-                console.error("SMTP error from backend:", data);
+                // Show the actual SMTP error for debugging
+                const detail = data.replace("Email Failed: ", "");
+                toast.error(`Email error: ${detail}`, { autoClose: 8000 });
+                console.error("SMTP error:", data);
             } else {
                 toast.error(data);
             }
