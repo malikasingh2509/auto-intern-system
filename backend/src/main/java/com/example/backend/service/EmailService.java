@@ -20,10 +20,10 @@ public class EmailService {
     @Value("${brevo.api.key:PLACEHOLDER}")
     private String brevoApiKey;
 
-    @Value("${brevo.from.email:smalika7489@gmail.com}")
+    @Value("${brevo.from.email:malikawork2509@gmail.com}")
     private String fromEmail;
 
-    @Value("${brevo.from.name:AI Career Dashboard}")
+    @Value("${brevo.from.name:Auto-Intern}")
     private String fromName;
 
     private static final String BREVO_URL = "https://api.brevo.com/v3/smtp/email";
