@@ -113,7 +113,7 @@ function Profile({
             👤 Personal Details
           </h2>
           
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+          <div className="half-grid">
             <div>
               <label style={labelStyle}>Full Name</label>
               <input
@@ -152,7 +152,7 @@ function Profile({
             />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+          <div className="half-grid">
             <div>
               <label style={labelStyle}>Years of Experience</label>
               <input
@@ -292,7 +292,7 @@ function Profile({
             🎯 Target Job Preferences
           </h2>
           
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+          <div className="half-grid">
             <div>
               <label style={labelStyle}>Preferred Roles</label>
               <input
@@ -319,7 +319,7 @@ function Profile({
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          <div className="half-grid" style={{ marginBottom: 0 }}>
             <div>
               <label style={labelStyle}>Employment Preference</label>
               <select

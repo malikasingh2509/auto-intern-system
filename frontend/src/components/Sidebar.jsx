@@ -38,19 +38,7 @@ function Sidebar() {
   };
 
   return (
-    <div
-      style={{
-        width: "260px",
-        backgroundColor: "#0b0f19",
-        minHeight: "100vh",
-        padding: "24px 16px",
-        boxSizing: "border-box",
-        borderRight: "1px solid #1e293b",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0
-      }}
-    >
+    <div className="sidebar-container">
       <h2 
         style={{ 
           fontSize: "20px",
@@ -63,43 +51,44 @@ function Sidebar() {
         AI Career
       </h2>
 
-      <nav style={{ display: "flex", flexDirection: "column", gap: "2px", flexGrow: 1 }}>
-        <Link to="/dashboard" style={getLinkStyle("/dashboard")}>
+      <nav className="sidebar-nav" style={{ flexGrow: 1 }}>
+        <Link to="/dashboard" style={getLinkStyle("/dashboard")} className={location.pathname === "/dashboard" ? "active" : ""}>
           📊 Dashboard
         </Link>
 
-        <Link to="/resume" style={getLinkStyle("/resume")}>
+        <Link to="/resume" style={getLinkStyle("/resume")} className={location.pathname === "/resume" ? "active" : ""}>
           📄 Resume Analysis
         </Link>
 
-        <Link to="/jobs" style={getLinkStyle("/jobs")}>
+        <Link to="/jobs" style={getLinkStyle("/jobs")} className={location.pathname === "/jobs" ? "active" : ""}>
           💼 Matched Jobs
         </Link>
 
-        <div style={labelStyle}>Career Tracker</div>
+        <div style={labelStyle} className="sidebar-label">Career Tracker</div>
 
-        <Link to="/tracker" style={getLinkStyle("/tracker")}>
+        <Link to="/tracker" style={getLinkStyle("/tracker")} className={location.pathname === "/tracker" ? "active" : ""}>
           🗂️ Kanban Board
         </Link>
 
-        <Link to="/applied" style={getLinkStyle("/applied")}>
+        <Link to="/applied" style={getLinkStyle("/applied")} className={location.pathname === "/applied" ? "active" : ""}>
           📋 Applied Jobs
         </Link>
 
-        <div style={labelStyle}>Insights</div>
+        <div style={labelStyle} className="sidebar-label">Insights</div>
 
-        <Link to="/suggestions" style={getLinkStyle("/suggestions")}>
+        <Link to="/suggestions" style={getLinkStyle("/suggestions")} className={location.pathname === "/suggestions" ? "active" : ""}>
           🤖 AI Suggestions
         </Link>
 
-        <div style={labelStyle}>Account</div>
+        <div style={labelStyle} className="sidebar-label">Account</div>
 
-        <Link to="/profile" style={getLinkStyle("/profile")}>
+        <Link to="/profile" style={getLinkStyle("/profile")} className={location.pathname === "/profile" ? "active" : ""}>
           ⚙️ Profile Settings
         </Link>
       </nav>
 
       <button
+        className="logout-btn"
         onClick={handleLogout}
         style={{
           marginTop: "24px",

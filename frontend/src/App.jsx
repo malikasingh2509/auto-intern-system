@@ -195,30 +195,12 @@ const handleSubmit = async (e) => {
     location.pathname === "/register";
 
   return (
-  <div
-    style={{
-      display: "flex",
-      width: "100%",
-      minHeight: "100vh",
-      background: "linear-gradient(to bottom right, #020617, #0f172a)",
-      color: "white",
-    }}
-  >
+  <div className="app-container">
     {!hideSidebar && <Sidebar />}
 
-    <div
-      style={{
-        flex: 1,
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        boxSizing: "border-box",
-        overflowX: "hidden",
-        minWidth: 0,
-      }}
-      >
+    <div className="main-content">
       {!hideSidebar && <Header activeUser={form} />}
-      <div style={{ flex: 1, padding: hideSidebar ? "0" : "32px", boxSizing: "border-box" }}>
+      <div className={hideSidebar ? "" : "main-content-padding"} style={{ flex: 1, padding: hideSidebar ? "0" : undefined, boxSizing: "border-box" }}>
     <Routes>
 
       <Route path="/" element={<Login />} />

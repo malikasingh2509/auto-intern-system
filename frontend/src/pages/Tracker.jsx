@@ -261,7 +261,7 @@ function Tracker({ userId }) {
         <p style={{ color: "#94a3b8", margin: "0 0 20px" }}>Drag cards between columns to track your hiring pipeline.</p>
 
         {/* Stats Row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
+        <div className="four-col-grid">
           {[
             { label: "Total Applied", value: stats.total, color: "#38bdf8" },
             { label: "Interviews", value: stats.interviews, color: "#a855f7" },

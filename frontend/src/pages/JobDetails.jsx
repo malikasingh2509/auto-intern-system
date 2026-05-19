@@ -133,7 +133,7 @@ function JobDetails({ userId, matchedJobs }) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
+      <div className="job-details-grid">
         {/* Left Column: Description */}
         <div style={{ backgroundColor: "#111827", border: "1px solid #1e293b", borderRadius: "16px", padding: "32px" }}>
           <h2 style={{ fontSize: "20px", color: "white", marginBottom: "16px" }}>Job Description</h2>

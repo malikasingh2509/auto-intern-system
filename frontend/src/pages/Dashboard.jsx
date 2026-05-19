@@ -266,7 +266,7 @@ function Dashboard({
       </div>
 
       {/* Grid Row 2: Analytics & Connected Platforms */}
-      <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: "24px", marginBottom: "32px", alignItems: "start" }}>
+      <div className="two-col-grid">
         {/* Analytics Chart Panel */}
         <div style={{ ...cardStyle, minHeight: "360px" }}>
           <div>

@@ -90,7 +90,7 @@ function GeneratedCVViewer({ cvData, onClose }) {
             <div style={{ padding: "40px", backgroundColor: "#0f172a", minHeight: "100%", color: "white" }}>
               <h3 style={{ fontSize: "24px", margin: "0 0 32px 0", color: "#f8fafc" }}>Optimization Results</h3>
               
-              <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "24px", alignItems: "center", marginBottom: "48px" }}>
+              <div className="half-grid" style={{ alignItems: "center", marginBottom: "48px" }}>
                 <div style={{ backgroundColor: "#1e293b", padding: "32px", borderRadius: "16px", textAlign: "center", border: "1px solid #334155" }}>
                   <p style={{ margin: "0 0 8px 0", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase" }}>Original ATS Score</p>
                   <span style={{ fontSize: "64px", fontWeight: "800", color: "#ef4444" }}>{cvData.originalAtsScore || 60}%</span>

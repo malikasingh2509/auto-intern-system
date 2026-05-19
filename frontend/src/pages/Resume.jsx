@@ -86,7 +86,7 @@ function Resume({ userId }) {
           </Link>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginTop: "24px" }}>
+        <div className="half-grid" style={{ marginTop: "24px" }}>
           {/* Main Score Panel */}
           <div style={{ backgroundColor: "#111827", border: "1px solid #1e293b", padding: "32px", borderRadius: "16px", boxShadow: "0 10px 30px rgba(0,0,0,0.3)" }}>
             <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#ffffff", marginBottom: "24px" }}>
@@ -107,7 +107,7 @@ function Resume({ userId }) {
               <div style={{ height: "100%", backgroundColor: analysis.overallScore >= 75 ? "#10b981" : analysis.overallScore >= 50 ? "#eab308" : "#ef4444", width: `${analysis.overallScore}%`, borderRadius: "9999px" }} />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div className="half-grid">
               <div>
                 <span style={{ fontSize: "12px", color: "#94a3b8", display: "block" }}>Keyword Density</span>
                 <span style={{ fontSize: "18px", color: "#ffffff", fontWeight: "700" }}>{analysis.keywordScore}%</span>
