@@ -12,15 +12,17 @@ public class EmailService {
     private JavaMailSender mailSender;
 
     public void sendEmail(String to, String subject, String text) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom("smalika7489@gmail.com");
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(text);
-            mailSender.send(message);
-        } catch (Exception e) {
-            System.err.println("Failed to send email: " + e.getMessage());
-        }
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom("smalika7489@gmail.com");
+                message.setTo(to);
+                message.setSubject(subject);
+                message.setText(text);
+                mailSender.send(message);
+            } catch (Exception e) {
+                System.err.println("Failed to send email: " + e.getMessage());
+            }
+        });
     }
 }

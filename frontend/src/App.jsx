@@ -18,6 +18,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Header from "./components/Header";
 import API_BASE_URL from "./config/api.js";
 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 function App() {
   const location = useLocation();
   const [form, setForm] = useState({
@@ -39,10 +42,12 @@ function App() {
   const [suggestions, setSuggestions] = useState([]);
   const[ resumeFile, setResumeFile] = useState(null);
   
-  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const showToast = (message, type = "success") => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
+    if (type === "success") {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
   };
 
   const fetchSuggestions = async (userId) => {
@@ -305,55 +310,18 @@ const handleSubmit = async (e) => {
     </div>
     </div>
 
-      {/* Modern Glassmorphic Toast Notification */}
-      {toast.show && (
-        <div
-          style={{
-            position: "fixed",
-            top: "24px",
-            right: "24px",
-            backgroundColor: "rgba(15, 23, 42, 0.85)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            border: toast.type === "success" ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(239, 68, 68, 0.4)",
-            borderRadius: "12px",
-            padding: "16px 24px",
-            boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            animation: "slideIn 0.3s ease-out forwards",
-            color: "white",
-            minWidth: "280px"
-          }}
-        >
-          <div
-            style={{
-              width: "24px",
-              height: "24px",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: toast.type === "success" ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)",
-              color: toast.type === "success" ? "#10b981" : "#ef4444",
-              fontWeight: "bold",
-              fontSize: "14px"
-            }}
-          >
-            {toast.type === "success" ? "✓" : "!"}
-          </div>
-          <div>
-            <div style={{ fontWeight: "700", fontSize: "14px", color: "#ffffff" }}>
-              {toast.type === "success" ? "Success" : "Notification"}
-            </div>
-            <div style={{ fontSize: "13px", color: "#94a3b8", marginTop: "2px" }}>
-              {toast.message}
-            </div>
-          </div>
-        </div>
-      )}
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 }

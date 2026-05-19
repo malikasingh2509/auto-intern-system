@@ -1,5 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
+import { toast } from "react-toastify";
 import API_BASE_URL from "../config/api.js";
 
 function Register() {
@@ -11,24 +12,30 @@ function Register() {
     const [domain, setDomain] = useState("");
     const [resumeFile, setResumeFile] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleRegister = async (e) => {
         e.preventDefault();
 
-        if (!name.trim() || !email.trim() || !password.trim()) {
-            alert("Please fill in Name, Email and Password");
+        if (!name.trim() || !email.trim() || !password.trim() || !skills.trim() || !experience.trim() || !domain.trim()) {
+            toast.error("Please fill all fields");
+            return;
+        }
+
+        if (!resumeFile) {
+            toast.error("Please upload your resume");
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            alert("Please enter a valid email address");
+            toast.error("Please enter a valid email");
             return;
         }
 
         if (password.length < 6) {
-            alert("Password must be at least 6 characters long");
+            toast.error("Password must be at least 6 characters");
             return;
         }
 
@@ -49,14 +56,14 @@ function Register() {
             });
 
             if (!response.ok) {
-                alert("Server error. Please try again later.");
+                toast.error("Server error. Please try again later.");
                 setLoading(false);
                 return;
             }
 
             const data = await response.text();
             if (data !== "Account Created") {
-                alert(data);
+                toast.error(data);
                 setLoading(false);
                 return;
             }
@@ -77,20 +84,21 @@ function Register() {
                 }
             }
 
-            alert("Account Created Successfully");
+            toast.success("Registration successful");
             navigate("/login");
         } catch (error) {
             console.error("Registration error:", error);
-            alert("Network error. Please make sure the backend is running.");
+            toast.error("Network error. Please make sure the backend is running.");
         } finally {
             setLoading(false);
         }
     };
 
-    const inputStyle = {
+    const inputStyle = (value) => ({
         width: "100%", padding: "14px", marginBottom: "16px", borderRadius: "8px",
-        border: "1px solid #334155", backgroundColor: "#0f172a", color: "white", boxSizing: "border-box"
-    };
+        border: value ? "1px solid #334155" : "1px solid #ef4444", 
+        backgroundColor: "#0f172a", color: "white", boxSizing: "border-box"
+    });
 
     return (
     <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(to bottom right, #020617, #0f172a)", padding: "40px 20px" }}>
@@ -98,26 +106,35 @@ function Register() {
             <h1 style={{ textAlign: "center", marginBottom: "30px", color: "white" }}>Create Account</h1>
 
             <div className="half-grid">
-                <input placeholder="Full Name *" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} required />
-                <input placeholder="Email *" type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+                <input placeholder="Full Name *" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(name)} />
+                <input placeholder="Email *" type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle(email)} />
             </div>
 
-            <input type="password" placeholder="Password *" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
+            <div style={{ position: "relative", marginBottom: "16px" }}>
+                <input type={showPassword ? "text" : "password"} placeholder="Password *" value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...inputStyle(password), marginBottom: 0 }} />
+                <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#94a3b8", cursor: "pointer" }}
+                >
+                    {showPassword ? "Hide" : "Show"}
+                </button>
+            </div>
             
             <div className="half-grid">
-                <input placeholder="Target Domain (e.g., Full Stack Intern)" value={domain} onChange={(e) => setDomain(e.target.value)} style={inputStyle} />
-                <input placeholder="Experience (e.g., 0 years)" value={experience} onChange={(e) => setExperience(e.target.value)} style={inputStyle} />
+                <input placeholder="Target Domain *" value={domain} onChange={(e) => setDomain(e.target.value)} style={inputStyle(domain)} />
+                <input placeholder="Experience *" value={experience} onChange={(e) => setExperience(e.target.value)} style={inputStyle(experience)} />
             </div>
 
-            <input placeholder="Skills (comma separated) (e.g., Java, MySQL)" value={skills} onChange={(e) => setSkills(e.target.value)} style={inputStyle} />
+            <input placeholder="Skills (comma separated) *" value={skills} onChange={(e) => setSkills(e.target.value)} style={inputStyle(skills)} />
             
             <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "block", color: "#94a3b8", fontSize: "14px", marginBottom: "8px" }}>Upload Resume (PDF)</label>
-                <input type="file" accept=".pdf" onChange={(e) => setResumeFile(e.target.files[0])} style={{ color: "white", fontSize: "14px" }} />
+                <label style={{ display: "block", color: "#94a3b8", fontSize: "14px", marginBottom: "8px" }}>Upload Resume (PDF) *</label>
+                <input type="file" accept=".pdf" onChange={(e) => setResumeFile(e.target.files[0])} style={{ color: "white", fontSize: "14px", border: resumeFile ? "none" : "1px dashed #ef4444", padding: "10px", borderRadius: "8px", width: "100%", boxSizing: "border-box" }} />
             </div>
 
             <button type="submit" disabled={loading} style={{ width: "100%", padding: "14px", border: "none", borderRadius: "8px", backgroundColor: loading ? "#64748b" : "#38bdf8", color: "white", fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer" }}>
-                {loading ? "Creating Account..." : "Create Account"}
+                {loading ? "Registering..." : "Create Account"}
             </button>
 
             <p style={{ marginTop: "20px", textAlign: "center", color: "white" }}>

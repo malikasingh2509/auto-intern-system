@@ -1,10 +1,13 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
+import { toast } from "react-toastify";
 import API_BASE_URL from "../config/api.js";
 
 function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const navigate = useNavigate();
 
@@ -13,16 +16,18 @@ function Login() {
 
         // 1. Empty field validation
         if (!email.trim() || !password.trim()) {
-            alert("Please fill in all fields");
+            toast.error("Please fill in all fields");
             return;
         }
 
         // 2. Email format validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            alert("Please enter a valid email address");
+            toast.error("Please enter a valid email address");
             return;
         }
+
+        setLoading(true);
 
         try {
             const response = await fetch(
@@ -40,23 +45,26 @@ function Login() {
             );
 
             if (!response.ok) {
-                alert("Server error. Please try again later.");
+                toast.error("Server error. Please try again later.");
+                setLoading(false);
                 return;
             }
 
             const data = await response.text();
 
             if (data === "Login Success") {
-                alert("Login Successful");
+                toast.success("Login Successful");
                 // Store session
                 localStorage.setItem("userEmail", email.trim());
                 navigate("/dashboard");
             } else {
-                alert(data); // Display backend message like "User Not Found" or "Invalid Password"
+                toast.error("Invalid email or password"); // Professional generic error
             }
         } catch (error) {
             console.error("Login error:", error);
-            alert("Network error. Please make sure the backend is running.");
+            toast.error("Network error. Please make sure the backend is running.");
+        } finally {
+            setLoading(false);
         }
     };
     return (
@@ -156,7 +164,7 @@ function Login() {
 
             <input
             type="email"
-            placeholder="Email"
+            placeholder="Email *"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             style={{
@@ -164,45 +172,63 @@ function Login() {
                 padding: "16px",
                 marginBottom: "20px",
                 borderRadius: "10px",
-                border: "none",
+                border: email ? "1px solid #334155" : "1px solid #ef4444",
                 boxSizing: "border-box",
                 backgroundColor: "#0f172a",
                 color: "white"
             }}
             />
 
-            <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{
-                width: "100%",
-                padding: "16px",
-                marginBottom: "20px",
-                borderRadius: "10px",
-                border: "none",
-                boxSizing: "border-box",
-                backgroundColor: "#0f172a",
-                color: "white"
-            }}
-            />
+            <div style={{ position: "relative", marginBottom: "20px" }}>
+                <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password *"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                    width: "100%",
+                    padding: "16px",
+                    borderRadius: "10px",
+                    border: password ? "1px solid #334155" : "1px solid #ef4444",
+                    boxSizing: "border-box",
+                    backgroundColor: "#0f172a",
+                    color: "white"
+                }}
+                />
+                <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                        position: "absolute",
+                        right: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        color: "#94a3b8",
+                        cursor: "pointer"
+                    }}
+                >
+                    {showPassword ? "Hide" : "Show"}
+                </button>
+            </div>
 
             <button
             type="submit"
+            disabled={loading}
             style={{
                 width: "100%",
                 padding: "16px",
                 border: "none",
                 borderRadius: "10px",
-                backgroundColor: "#38bdf8",
+                backgroundColor: loading ? "#64748b" : "#38bdf8",
                 color: "white",
                 fontWeight: "bold",
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 fontSize: "16px"
             }}
             >
-            Login
+            {loading ? "Authenticating..." : "Login"}
             </button>
 
             <p
