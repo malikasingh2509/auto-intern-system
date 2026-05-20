@@ -40,4 +40,20 @@ public class ApplicationController {
     public List<com.example.backend.model.ApplicationHistory> getApplicationHistory(@PathVariable Long appId) {
         return trackerService.getApplicationHistory(appId);
     }
+
+    /** Delete a single application by ID */
+    @DeleteMapping("/{appId}")
+    public void deleteApplication(@PathVariable Long appId) {
+        trackerService.deleteApplication(appId);
+    }
+
+    /** Bulk-delete all fake auto-applied records for a user (notes = 'Applied via Job Board' etc.) */
+    @DeleteMapping("/user/{userId}/cleanup-fake")
+    public Map<String, Object> cleanupFake(@PathVariable Long userId) {
+        int deleted = trackerService.deleteFakeApplications(userId);
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("deleted", deleted);
+        result.put("message", "Removed " + deleted + " auto-applied fake records.");
+        return result;
+    }
 }

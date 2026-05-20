@@ -99,4 +99,34 @@ public class ApplicationTrackerService {
     public List<ApplicationHistory> getApplicationHistory(Long appId) {
         return historyRepository.findByApplicationIdOrderByTimestampDesc(appId);
     }
+
+    /**
+     * Delete a single application and all its related history/interviews.
+     */
+    public void deleteApplication(Long appId) {
+        applicationRepository.findById(appId).ifPresent(app -> {
+            historyRepository.deleteAll(historyRepository.findByApplicationIdOrderByTimestampDesc(appId));
+            applicationRepository.delete(app);
+        });
+    }
+
+    /**
+     * Bulk-delete all fake auto-applied records for a user.
+     * Targets records with notes that were written by the old auto-apply logic.
+     */
+    public int deleteFakeApplications(Long userId) {
+        List<String> fakeNotes = List.of(
+            "Applied via Job Board",
+            "Applied via AI Career Dashboard",
+            "Testing notes",
+            "Manually marked as applied",
+            "Manually marked as applied from Job Details"
+        );
+        List<Application> fakeApps = applicationRepository.findByUserIdAndNotesIn(userId, fakeNotes);
+        for (Application app : fakeApps) {
+            historyRepository.deleteAll(historyRepository.findByApplicationIdOrderByTimestampDesc(app.getId()));
+        }
+        applicationRepository.deleteAll(fakeApps);
+        return fakeApps.size();
+    }
 }
