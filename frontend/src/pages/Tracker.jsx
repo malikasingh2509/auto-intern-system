@@ -1,20 +1,36 @@
 import { useState, useEffect } from "react";
 import API_BASE_URL from "../config/api.js";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TRACKER — completely rebuilt from scratch.
+//
+// STATE ARCHITECTURE:
+//   applications[]  → fetched ONCE on mount, populated from GET /applications/user/:id
+//                     ONLY mutated by:
+//                       (1) handleDrop       — drag & drop moves a card between columns
+//                       (2) handleStatusChange — clicking a stage button in the modal
+//
+//   NO connection to MatchedJobs.
+//   NO connection to Apply Now button.
+//   NO connection to opening external links.
+//   NO optimistic inserts from JobCard.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const COLUMNS = [
-  { id: "Applied", label: "Applied", icon: "📩", color: "#38bdf8" },
-  { id: "In Review", label: "In Review", icon: "🔍", color: "#eab308" },
+  { id: "Applied",             label: "Applied",   icon: "📩", color: "#38bdf8" },
+  { id: "In Review",           label: "In Review", icon: "🔍", color: "#eab308" },
   { id: "Interview Scheduled", label: "Interview", icon: "📅", color: "#a855f7" },
-  { id: "Selected", label: "Selected", icon: "✅", color: "#10b981" },
-  { id: "Rejected", label: "Rejected", icon: "❌", color: "#ef4444" },
+  { id: "Selected",            label: "Selected",  icon: "✅", color: "#10b981" },
+  { id: "Rejected",            label: "Rejected",  icon: "❌", color: "#ef4444" },
 ];
 
+// ─── AppCard: display only, no state mutation ─────────────────────────────────
 function AppCard({ app, onDragStart, onClick }) {
   const col = COLUMNS.find(c => c.id === app.status) || COLUMNS[0];
   return (
     <div
       draggable
-      onDragStart={(e) => onDragStart(e, app.id)}
+      onDragStart={e => onDragStart(e, app.id)}
       onClick={() => onClick(app)}
       style={{
         backgroundColor: "#0f172a",
@@ -54,6 +70,7 @@ function AppCard({ app, onDragStart, onClick }) {
   );
 }
 
+// ─── AppModal: timeline + interviews, uses PUT /status only ──────────────────
 function AppModal({ app, onClose, onStatusChange }) {
   const [history, setHistory] = useState([]);
   const [interviews, setInterviews] = useState([]);
@@ -100,13 +117,15 @@ function AppModal({ app, onClose, onStatusChange }) {
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#64748b", fontSize: "22px", cursor: "pointer" }}>✕</button>
         </div>
 
-        {/* Status Changer */}
+        {/* Stage Mover — PUT /status only */}
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #334155" }}>
           <p style={{ margin: "0 0 12px", fontSize: "13px", fontWeight: "600", color: "#94a3b8", textTransform: "uppercase" }}>Move Pipeline Stage</p>
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             {COLUMNS.map(c => (
-              <button key={c.id} onClick={() => onStatusChange(app.id, c.id)}
-                style={{ padding: "8px 14px", borderRadius: "8px", border: `1px solid ${c.color}`, backgroundColor: app.status === c.id ? `${c.color}30` : "transparent", color: c.color, cursor: "pointer", fontWeight: "600", fontSize: "13px" }}>
+              <button key={c.id}
+                onClick={() => onStatusChange(app.id, c.id)}
+                style={{ padding: "8px 14px", borderRadius: "8px", border: `1px solid ${c.color}`, backgroundColor: app.status === c.id ? `${c.color}30` : "transparent", color: c.color, cursor: "pointer", fontWeight: "600", fontSize: "13px" }}
+              >
                 {c.icon} {c.label}
               </button>
             ))}
@@ -171,72 +190,102 @@ function AppModal({ app, onClose, onStatusChange }) {
 
           {interviews.length === 0 ? (
             <p style={{ color: "#64748b", fontSize: "14px" }}>No interviews scheduled yet.</p>
-          ) : (
-            interviews.map((iv, i) => (
-              <div key={i} style={{ backgroundColor: "#0f172a", borderRadius: "10px", padding: "14px", marginBottom: "10px", border: "1px solid #334155" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <span style={{ color: "#a855f7", fontWeight: "700" }}>{iv.roundType} Round</span>
-                  {iv.interviewDate && <span style={{ color: "#94a3b8", fontSize: "13px" }}>{new Date(iv.interviewDate).toLocaleString()}</span>}
-                </div>
-                {iv.meetingLink && <a href={iv.meetingLink} target="_blank" rel="noreferrer" style={{ color: "#38bdf8", fontSize: "13px", textDecoration: "none" }}>🔗 Join Meeting</a>}
-                {iv.notes && <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: "13px" }}>{iv.notes}</p>}
+          ) : interviews.map((iv, i) => (
+            <div key={i} style={{ backgroundColor: "#0f172a", borderRadius: "10px", padding: "14px", marginBottom: "10px", border: "1px solid #334155" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ color: "#a855f7", fontWeight: "700" }}>{iv.roundType} Round</span>
+                {iv.interviewDate && <span style={{ color: "#94a3b8", fontSize: "13px" }}>{new Date(iv.interviewDate).toLocaleString()}</span>}
               </div>
-            ))
-          )}
+              {iv.meetingLink && <a href={iv.meetingLink} target="_blank" rel="noreferrer" style={{ color: "#38bdf8", fontSize: "13px", textDecoration: "none" }}>🔗 Join Meeting</a>}
+              {iv.notes && <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: "13px" }}>{iv.notes}</p>}
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
+// ─── Tracker: the main page ────────────────────────────────────────────────────
 function Tracker({ userId }) {
+  // ── SOLE SOURCE OF TRUTH for tracker state ──────────────────────────────────
+  // Populated ONLY from GET /applications/user/:id on mount.
+  // Mutated ONLY by drag-drop and modal status changes (both PUT /status).
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dragOverCol, setDragOverCol] = useState(null);
   const [selectedApp, setSelectedApp] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // ── Fetch applications on mount — reads from DB, not from matched jobs ──────
   const fetchApplications = async () => {
-    if (!userId) return;
+    if (!userId) { setLoading(false); return; }
     try {
       const res = await fetch(`${API_BASE_URL}/applications/user/${userId}`);
-      if (res.ok) setApplications(await res.json());
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+      if (res.ok) {
+        const data = await res.json();
+        console.log(`[TRACKER] Loaded ${data.length} applications from database.`);
+        setApplications(data);
+      }
+    } catch (e) {
+      console.error("[TRACKER] Failed to load applications:", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchApplications(); }, [userId]);
+  // Single useEffect — only depends on userId, never on matched jobs
+  useEffect(() => {
+    fetchApplications();
+  }, [userId]);
 
+  // ── Drag & Drop: moves an existing card, never ADDS a new one ───────────────
   const handleDragStart = (e, appId) => {
-    e.dataTransfer.setData("appId", appId);
+    e.dataTransfer.setData("appId", String(appId));
   };
 
   const handleDrop = async (e, newStatus) => {
     e.preventDefault();
-    const appId = parseInt(e.dataTransfer.getData("appId"));
+    const appId = parseInt(e.dataTransfer.getData("appId"), 10);
     setDragOverCol(null);
 
-    // Optimistic update
-    setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: newStatus } : a));
+    // Optimistic update — this only MOVES an existing item, never adds one
+    setApplications(prev => {
+      const updated = prev.map(a => a.id === appId ? { ...a, status: newStatus } : a);
+      console.log(`[TRACKER] Drag-drop: moved app #${appId} to "${newStatus}". Count unchanged: ${updated.length}`);
+      return updated;
+    });
 
     try {
       await fetch(`${API_BASE_URL}/applications/${appId}/status`, {
-        method: "PUT",
+        method:  "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus })
+        body:    JSON.stringify({ status: newStatus })
       });
-    } catch (e) { console.error(e); fetchApplications(); }
+    } catch (e) {
+      console.error("[TRACKER] Drop PUT failed, reverting:", e);
+      fetchApplications(); // revert on failure
+    }
   };
 
+  // ── Status change from modal: only updates status, never adds ───────────────
   const handleStatusChange = async (appId, newStatus) => {
-    setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: newStatus } : a));
+    setApplications(prev => {
+      const updated = prev.map(a => a.id === appId ? { ...a, status: newStatus } : a);
+      console.log(`[TRACKER] Modal status change: app #${appId} → "${newStatus}". Count unchanged: ${updated.length}`);
+      return updated;
+    });
     if (selectedApp?.id === appId) setSelectedApp(prev => ({ ...prev, status: newStatus }));
+
     try {
       await fetch(`${API_BASE_URL}/applications/${appId}/status`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus })
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ status: newStatus })
       });
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error("[TRACKER] Status PUT failed:", e);
+    }
   };
 
   if (loading) return <div style={{ textAlign: "center", padding: "100px", color: "white" }}>Loading Tracker...</div>;
@@ -246,27 +295,33 @@ function Tracker({ userId }) {
     return (a.jobTitle || "").toLowerCase().includes(t) || (a.company || "").toLowerCase().includes(t);
   });
 
+  // ── Stats derived ONLY from tracker applications array ──────────────────────
   const stats = {
-    total: applications.length,
+    total:      applications.length,
     interviews: applications.filter(a => a.status === "Interview Scheduled").length,
-    accepted: applications.filter(a => a.status === "Selected").length,
-    rejected: applications.filter(a => a.status === "Rejected").length,
+    accepted:   applications.filter(a => a.status === "Selected").length,
+    rejected:   applications.filter(a => a.status === "Rejected").length,
   };
 
   return (
     <div style={{ paddingBottom: "60px" }}>
-      {/* Page Header */}
+      {/* Header */}
       <div style={{ marginBottom: "32px" }}>
         <h1 style={{ fontSize: "32px", fontWeight: "800", color: "white", margin: "0 0 8px" }}>Application Tracker</h1>
-        <p style={{ color: "#94a3b8", margin: "0 0 20px" }}>Drag cards between columns to track your hiring pipeline.</p>
+        <p style={{ color: "#94a3b8", margin: "0 0 4px" }}>
+          Track your hiring pipeline. Use <strong style={{ color: "#38bdf8" }}>Mark as Applied</strong> on the Jobs page to add entries.
+        </p>
+        <p style={{ color: "#64748b", margin: "0 0 20px", fontSize: "13px" }}>
+          Drag cards between columns to update their stage.
+        </p>
 
-        {/* Stats Row */}
+        {/* Stats — derived purely from tracker state */}
         <div className="four-col-grid">
           {[
-            { label: "Total Applied", value: stats.total, color: "#38bdf8" },
-            { label: "Interviews", value: stats.interviews, color: "#a855f7" },
-            { label: "Accepted", value: stats.accepted, color: "#10b981" },
-            { label: "Rejected", value: stats.rejected, color: "#ef4444" },
+            { label: "Total Applied",  value: stats.total,      color: "#38bdf8" },
+            { label: "Interviews",     value: stats.interviews,  color: "#a855f7" },
+            { label: "Accepted",       value: stats.accepted,    color: "#10b981" },
+            { label: "Rejected",       value: stats.rejected,    color: "#ef4444" },
           ].map(s => (
             <div key={s.label} style={{ backgroundColor: "#111827", border: "1px solid #1e293b", borderRadius: "12px", padding: "16px" }}>
               <p style={{ margin: "0 0 4px", color: "#94a3b8", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>{s.label}</p>
@@ -275,54 +330,69 @@ function Tracker({ userId }) {
           ))}
         </div>
 
-        <input type="text" placeholder="Search by company or title..." value={searchTerm}
+        <input
+          type="text"
+          placeholder="Search by company or title..."
+          value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          style={{ width: "100%", maxWidth: "360px", padding: "10px 16px", borderRadius: "8px", border: "1px solid #334155", backgroundColor: "#1e293b", color: "white", outline: "none", fontSize: "14px" }}
+          style={{ width: "100%", maxWidth: "360px", padding: "10px 16px", borderRadius: "8px", border: "1px solid #334155", backgroundColor: "#1e293b", color: "white", outline: "none", fontSize: "14px", marginTop: "20px" }}
         />
       </div>
 
+      {/* Empty state */}
+      {applications.length === 0 && (
+        <div style={{ textAlign: "center", padding: "60px", backgroundColor: "#111827", borderRadius: "16px", border: "1px dashed #334155" }}>
+          <div style={{ fontSize: "48px", marginBottom: "16px" }}>📋</div>
+          <h3 style={{ color: "white", marginBottom: "8px" }}>No applications yet</h3>
+          <p style={{ color: "#64748b" }}>
+            Go to the <strong style={{ color: "#38bdf8" }}>Jobs</strong> page and click <strong style={{ color: "#38bdf8" }}>Mark as Applied</strong> on a job to add it here.
+          </p>
+        </div>
+      )}
+
       {/* Kanban Board */}
-      <div style={{ display: "flex", gap: "16px", overflowX: "auto", paddingBottom: "24px", minHeight: "600px" }}>
-        {COLUMNS.map(col => {
-          const colApps = filtered.filter(a => a.status === col.id);
-          const isDragOver = dragOverCol === col.id;
-          return (
-            <div key={col.id}
-              onDragOver={e => { e.preventDefault(); setDragOverCol(col.id); }}
-              onDragLeave={() => setDragOverCol(null)}
-              onDrop={e => handleDrop(e, col.id)}
-              style={{
-                minWidth: "240px", width: "240px", backgroundColor: isDragOver ? "#1e293b" : "#0b0f19",
-                borderRadius: "14px", padding: "16px",
-                border: `1px solid ${isDragOver ? col.color : "#1e293b"}`,
-                transition: "all 0.2s ease", flexShrink: 0
-              }}
-            >
-              {/* Column Header */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontSize: "18px" }}>{col.icon}</span>
-                  <span style={{ fontWeight: "700", color: col.color, fontSize: "14px" }}>{col.label}</span>
+      {applications.length > 0 && (
+        <div style={{ display: "flex", gap: "16px", overflowX: "auto", paddingBottom: "24px", minHeight: "600px" }}>
+          {COLUMNS.map(col => {
+            const colApps = filtered.filter(a => a.status === col.id);
+            const isDragOver = dragOverCol === col.id;
+            return (
+              <div key={col.id}
+                onDragOver={e => { e.preventDefault(); setDragOverCol(col.id); }}
+                onDragLeave={() => setDragOverCol(null)}
+                onDrop={e => handleDrop(e, col.id)}
+                style={{
+                  minWidth: "240px", width: "240px",
+                  backgroundColor: isDragOver ? "#1e293b" : "#0b0f19",
+                  borderRadius: "14px", padding: "16px",
+                  border: `1px solid ${isDragOver ? col.color : "#1e293b"}`,
+                  transition: "all 0.2s ease", flexShrink: 0
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "18px" }}>{col.icon}</span>
+                    <span style={{ fontWeight: "700", color: col.color, fontSize: "14px" }}>{col.label}</span>
+                  </div>
+                  <span style={{ backgroundColor: `${col.color}20`, color: col.color, padding: "2px 8px", borderRadius: "20px", fontSize: "12px", fontWeight: "700" }}>
+                    {colApps.length}
+                  </span>
                 </div>
-                <span style={{ backgroundColor: `${col.color}20`, color: col.color, padding: "2px 8px", borderRadius: "20px", fontSize: "12px", fontWeight: "700" }}>
-                  {colApps.length}
-                </span>
+
+                {colApps.map(app => (
+                  <AppCard key={app.id} app={app} onDragStart={handleDragStart} onClick={() => setSelectedApp(app)} />
+                ))}
+
+                {colApps.length === 0 && (
+                  <div style={{ border: "2px dashed #1e293b", borderRadius: "10px", padding: "24px", textAlign: "center", color: "#334155", fontSize: "13px" }}>
+                    Drop here
+                  </div>
+                )}
               </div>
-
-              {/* Cards */}
-              {colApps.map(app => (
-                <AppCard key={app.id} app={app} onDragStart={handleDragStart} onClick={() => setSelectedApp(app)} />
-              ))}
-
-              {colApps.length === 0 && (
-                <div style={{ border: "2px dashed #1e293b", borderRadius: "10px", padding: "24px", textAlign: "center", color: "#334155", fontSize: "13px" }}>
-                  Drop here
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {selectedApp && (
         <AppModal app={selectedApp} onClose={() => setSelectedApp(null)} onStatusChange={handleStatusChange} />

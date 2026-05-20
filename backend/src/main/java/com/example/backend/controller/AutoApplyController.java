@@ -36,43 +36,6 @@ public class AutoApplyController {
         List<Map<String, Object>> appliedJobs =
                 new ArrayList<>();
 
-        for (Job job : jobs) {
-
-            String[] requiredSkills =
-                    job.getSkillsRequired().toLowerCase().split(",");
-
-            int matched = 0;
-
-            for (String skill : requiredSkills) {
-
-                if (resumeText.contains(skill.trim())) {
-                    matched++;
-                }
-            }
-
-            double percentage =
-                    ((double) matched / requiredSkills.length) * 100;
-
-            if (percentage >= 60) {
-
-                Map<String, Object> map =
-                        new HashMap<>();
-
-                map.put("jobTitle", job.getTitle());
-
-                map.put("company", job.getCompany());
-
-                map.put("matchPercentage", percentage);
-
-                map.put(
-                        "status",
-                        "Application Submitted"
-                );
-
-                appliedJobs.add(map);
-            }
-        }
-
         return appliedJobs;
     }
 }

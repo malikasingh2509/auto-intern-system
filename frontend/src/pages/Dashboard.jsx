@@ -53,7 +53,10 @@ function Dashboard({
     if (activeUser?.id) {
       fetch(`${API_BASE_URL}/applications/user/${activeUser.id}`)
         .then(res => res.json())
-        .then(data => setApplications(data))
+        .then(data => {
+          console.log(`[TRACKER DEBUG]\nfunction: Dashboard useEffect\nold value: ${applications.length}\nnew value: ${data.length}\ntrigger source: network fetch\njob id: N/A`);
+          setApplications(data);
+        })
         .catch(console.error);
 
       fetch(`${API_BASE_URL}/analyze-resume/${activeUser.id}`)
