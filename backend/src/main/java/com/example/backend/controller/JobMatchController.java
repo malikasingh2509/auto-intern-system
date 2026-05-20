@@ -49,6 +49,7 @@ public class JobMatchController {
         log.info("[MATCH] Aggregator returned " + jobs.size() + " jobs");
 
         List<Map<String, Object>> results = new ArrayList<>();
+        int index = 1; // Sequential ID starting at 1
 
         for (Job job : jobs) {
             // ── Strict per-job validation before scoring ──────────────────────
@@ -60,8 +61,9 @@ public class JobMatchController {
             double matchScore = calculateMatchScore(job, resumeText, userSkills, userRoles);
 
             Map<String, Object> map = new LinkedHashMap<>();
-            map.put("id",             job.getId());
-            map.put("jobId",          job.getId());
+            // Assign stable sequential ID so frontend can navigate to /job/:id
+            map.put("id",             (long) index);
+            map.put("jobId",          (long) index);
             map.put("title",          job.getTitle());
             map.put("jobTitle",       job.getTitle());
             map.put("company",        job.getCompany());
@@ -74,6 +76,7 @@ public class JobMatchController {
             map.put("matchPercentage", matchScore);
 
             results.add(map);
+            index++;
         }
 
         // Sort descending by match score
