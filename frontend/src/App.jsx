@@ -91,6 +91,10 @@ function App() {
         const data = await response.text();
         if (data && data.trim().length > 0) {
           const userObj = JSON.parse(data);
+          // Cache userId in localStorage so child pages can read it immediately on refresh
+          if (userObj.id) {
+            localStorage.setItem("userId", String(userObj.id));
+          }
           setForm({
             id: userObj.id || null,
             name: userObj.name || "",
@@ -104,7 +108,8 @@ function App() {
             preferredRoles: userObj.preferredRoles || "",
             preferredLocations: userObj.preferredLocations || "",
             jobTypePreference: userObj.jobTypePreference || "Full-time",
-            salaryExpectations: userObj.salaryExpectations || ""
+            salaryExpectations: userObj.salaryExpectations || "",
+            resume: userObj.resume || ""
           });
           if (userObj.id) {
             // Run jobs and suggestions in PARALLEL — not sequentially

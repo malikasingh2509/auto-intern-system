@@ -8,16 +8,20 @@ function Suggestions({ suggestions, userId }) {
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
 
+  // Resolve actual userId from prop or localStorage fallback
+  const getEffectiveUserId = () => {
+    if (userId) return userId;
+    const cached = localStorage.getItem("userId");
+    return cached ? parseInt(cached) : null;
+  };
+
   // Initialize messages from localStorage if available
   const [messages, setMessages] = useState(() => {
-    if (userId) {
-      const saved = localStorage.getItem(`chat_history_${userId}`);
+    const uid = userId || localStorage.getItem("userId");
+    if (uid) {
+      const saved = localStorage.getItem(`chat_history_${uid}`);
       if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          console.error("Failed to parse chat history", e);
-        }
+        try { return JSON.parse(saved); } catch (e) {}
       }
     }
     return [
@@ -87,7 +91,12 @@ function Suggestions({ suggestions, userId }) {
         text: msg.text
       }));
 
-      const response = await fetch(`${API_BASE_URL}/chat/${userId || 1}`, {
+      const effectiveUserId = getEffectiveUserId();
+      if (!effectiveUserId) {
+        throw new Error("User not identified. Please log in again.");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/chat/${effectiveUserId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

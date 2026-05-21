@@ -141,7 +141,8 @@ function Profile({
                 preferredRoles: userObj.preferredRoles || "",
                 preferredLocations: userObj.preferredLocations || "",
                 jobTypePreference: userObj.jobTypePreference || "Full-time",
-                salaryExpectations: userObj.salaryExpectations || ""
+                salaryExpectations: userObj.salaryExpectations || "",
+                resume: userObj.resume || ""
               });
             } else {
               setForm({
@@ -564,7 +565,7 @@ function Profile({
                   {selectedFileName ? (
                     <div style={{
                       marginTop: "16px",
-                      padding: "8px 16px",
+                      padding: "10px 18px",
                       backgroundColor: "rgba(16, 185, 129, 0.1)",
                       border: "1px solid rgba(16, 185, 129, 0.3)",
                       borderRadius: "8px",
@@ -575,13 +576,13 @@ function Profile({
                       alignItems: "center",
                       gap: "8px"
                     }}>
-                      <span>📄 Selected:</span>
-                      <span>{selectedFileName}</span>
+                      <span>📄</span>
+                      <span>Uploaded: {selectedFileName}</span>
                     </div>
-                  ) : form.id ? (
+                  ) : form.resume ? (
                     <div style={{
                       marginTop: "16px",
-                      padding: "8px 16px",
+                      padding: "10px 18px",
                       backgroundColor: "rgba(56, 189, 248, 0.1)",
                       border: "1px solid rgba(56, 189, 248, 0.3)",
                       borderRadius: "8px",
@@ -592,9 +593,27 @@ function Profile({
                       alignItems: "center",
                       gap: "8px"
                     }}>
-                      <span>✓ Loaded Resume Sync Available</span>
+                      <span>✓</span>
+                      <span>Saved Resume: {form.resume.includes("/") ? form.resume.split("/").pop() : form.resume.includes("\\") ? form.resume.split("\\").pop() : form.resume}</span>
+                      <span style={{ fontSize: "11px", color: "#64748b", marginLeft: "4px" }}>(Click to replace)</span>
                     </div>
-                  ) : null}
+                  ) : (
+                    <div style={{
+                      marginTop: "16px",
+                      padding: "8px 16px",
+                      backgroundColor: "rgba(100, 116, 139, 0.1)",
+                      border: "1px dashed #334155",
+                      borderRadius: "8px",
+                      color: "#64748b",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}>
+                      <span>📎 No resume uploaded yet — drag a PDF or click to browse</span>
+                    </div>
+                  )}
                 </label>
               </div>
 
