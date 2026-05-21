@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import Sidebar from "./components/Sidebar";
+import { DesktopSidebar, MobileHeader, DesktopHeader } from "./components/Sidebar";
 import { Routes, Route } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
@@ -17,7 +17,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { useLocation } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Header from "./components/Header";
+// Header is now part of Sidebar.jsx
 import API_BASE_URL from "./config/api.js";
 
 import { ToastContainer, toast } from 'react-toastify';
@@ -205,10 +205,11 @@ const handleSubmit = async (e) => {
 
   return (
   <div className="app-container">
-    {!hideSidebar && <Sidebar />}
+    {!hideSidebar && <DesktopSidebar />}
 
     <div className="main-content">
-      {!hideSidebar && <Header activeUser={form} />}
+      {!hideSidebar && <MobileHeader activeUser={form} />}
+      {!hideSidebar && <DesktopHeader activeUser={form} />}
       <div className={hideSidebar ? "" : "main-content-padding"} style={{ flex: 1, padding: hideSidebar ? "0" : undefined, boxSizing: "border-box" }}>
     <Routes>
 

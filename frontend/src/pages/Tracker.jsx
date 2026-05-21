@@ -352,7 +352,7 @@ function Tracker({ userId }) {
 
       {/* Kanban Board */}
       {applications.length > 0 && (
-        <div style={{ display: "flex", gap: "16px", overflowX: "auto", paddingBottom: "24px", minHeight: "600px" }}>
+        <div className="kanban-board">
           {COLUMNS.map(col => {
             const colApps = filtered.filter(a => a.status === col.id);
             const isDragOver = dragOverCol === col.id;
@@ -361,6 +361,7 @@ function Tracker({ userId }) {
                 onDragOver={e => { e.preventDefault(); setDragOverCol(col.id); }}
                 onDragLeave={() => setDragOverCol(null)}
                 onDrop={e => handleDrop(e, col.id)}
+                className="kanban-column"
                 style={{
                   minWidth: "240px", width: "240px",
                   backgroundColor: isDragOver ? "#1e293b" : "#0b0f19",
@@ -393,6 +394,7 @@ function Tracker({ userId }) {
           })}
         </div>
       )}
+
 
       {selectedApp && (
         <AppModal app={selectedApp} onClose={() => setSelectedApp(null)} onStatusChange={handleStatusChange} />
