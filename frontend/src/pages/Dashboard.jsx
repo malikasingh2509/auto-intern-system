@@ -1,14 +1,3 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  PieChart,
-  Pie
-} from "recharts";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import API_BASE_URL from "../config/api.js";
@@ -268,96 +257,74 @@ function Dashboard({
         </div>
       </div>
 
-      {/* Grid Row 2: Analytics & Connected Platforms */}
-      <div className="two-col-grid">
-        {/* Analytics Chart Panel */}
-        <div style={{ ...cardStyle, minHeight: "360px" }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "#ffffff" }}>
-              System Command Analytics
-            </h3>
-            <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "2px", marginBottom: "20px" }}>
-              Overview of centralized jobs database and suggestion counts.
-            </p>
-          </div>
-          
-          <div style={{ width: "100%", height: "240px" }}>
-            <ResponsiveContainer>
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <XAxis dataKey="name" stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis stroke="#64748b" tick={{ fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", borderRadius: "8px", color: "white" }} />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+      {/* Connected Channels Panel */}
+      <div style={{ ...cardStyle, minHeight: "auto", marginBottom: "32px" }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "800", color: "#ffffff" }}>
+            Connected Channels
+          </h3>
+          <p style={{ fontSize: "14px", color: "#94a3b8", marginTop: "4px", marginBottom: "24px" }}>
+            Centralize and monitor your professional job search profiles.
+          </p>
         </div>
 
-        {/* Connected Platforms Panel */}
-        <div style={{ ...cardStyle, minHeight: "360px" }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "#ffffff" }}>
-              Connected Channels
-            </h3>
-            <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "2px", marginBottom: "20px" }}>
-              Centralize external profile sources.
-            </p>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {platforms.map((platform) => {
-              const isConnected = platform.url && platform.url.trim() !== "";
-              return (
-                <div
-                  key={platform.name}
-                  style={{
-                    backgroundColor: platform.bg,
-                    border: `1px solid ${platform.border}`,
-                    borderRadius: "12px",
-                    padding: "16px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div
-                      style={{
-                        width: "10px",
-                        height: "10px",
-                        borderRadius: "50%",
-                        backgroundColor: isConnected ? "#10b981" : "#64748b",
-                        boxShadow: isConnected ? "0 0 10px #10b981" : "none"
-                      }}
-                    />
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: "15px", fontWeight: "700", color: "#ffffff" }}>
-                        {platform.name}
-                      </h4>
-                      <p style={{ margin: 0, fontSize: "12px", color: isConnected ? "#94a3b8" : "#64748b", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {isConnected ? platform.url : "Not Connected"}
-                      </p>
-                    </div>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: "20px"
+        }}>
+          {platforms.map((platform) => {
+            const isConnected = platform.url && platform.url.trim() !== "";
+            return (
+              <div
+                key={platform.name}
+                style={{
+                  backgroundColor: platform.bg,
+                  border: `1px solid ${platform.border}`,
+                  borderRadius: "14px",
+                  padding: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  minHeight: "150px",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "18px", fontWeight: "800", color: "#ffffff" }}>
+                      {platform.name}
+                    </h4>
+                    <p style={{ margin: "6px 0 0 0", fontSize: "13px", color: isConnected ? "#e2e8f0" : "#64748b", maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {isConnected ? platform.url : "No Profile Linked"}
+                    </p>
                   </div>
-                  
+                  <div
+                    style={{
+                      width: "10px",
+                      height: "10px",
+                      borderRadius: "50%",
+                      backgroundColor: isConnected ? "#10b981" : "#64748b",
+                      boxShadow: isConnected ? "0 0 12px #10b981" : "none"
+                    }}
+                  />
+                </div>
+                
+                <div style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end" }}>
                   {isConnected ? (
-                    <span style={{ fontSize: "12px", color: "#10b981", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
-                      ✓ Connected
+                    <span style={{ fontSize: "13px", color: "#10b981", fontWeight: "700", display: "flex", alignItems: "center", gap: "6px" }}>
+                      ✓ Active Connection
                     </span>
                   ) : (
                     <button
                       onClick={() => navigate("/profile")}
                       style={{
-                        padding: "8px 16px",
+                        padding: "8px 18px",
                         borderRadius: "8px",
                         border: "none",
                         backgroundColor: "#1e293b",
                         color: "white",
-                        fontSize: "12px",
+                        fontSize: "13px",
                         fontWeight: "700",
                         cursor: "pointer",
                         border: "1px solid #334155",
@@ -372,50 +339,13 @@ function Dashboard({
                         e.currentTarget.style.color = "white";
                       }}
                     >
-                      Connect
+                      Connect Profile
                     </button>
                   )}
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Grid Row 3: Application Pipeline Analytics */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px", marginBottom: "32px" }}>
-        <div style={{ ...cardStyle, minHeight: "360px" }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "#ffffff" }}>
-              Application Pipeline Overview
-            </h3>
-            <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "2px", marginBottom: "20px" }}>
-              Distribution of your job applications across different hiring stages.
-            </p>
-          </div>
-          
-          <div style={{ width: "100%", height: "280px", display: "flex", justifyContent: "center" }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={applicationChartData.filter(d => d.value > 0)}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}
-                >
-                  {applicationChartData.filter(d => d.value > 0).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getStatusColor(entry.name)} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", borderRadius: "8px", color: "white" }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
