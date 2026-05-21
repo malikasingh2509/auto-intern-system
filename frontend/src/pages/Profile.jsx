@@ -13,6 +13,111 @@ function Profile({
   const [saveStatus, setSaveStatus] = useState({ show: false, success: true, message: "" });
   const [selectedFileName, setSelectedFileName] = useState("");
 
+  // Dropdown options
+  const roleOptions = ["Frontend Engineer", "Backend Engineer", "Fullstack Engineer", "Mobile App Developer", "DevOps Engineer", "Data Scientist", "Product Manager", "QA Engineer"];
+  const locationOptions = ["Remote", "Bangalore", "Mumbai", "New Delhi", "Noida", "Hyderabad", "Pune", "Chennai"];
+  const salaryOptions = ["₹3,00,000+", "₹5,00,000+", "₹8,00,000+", "₹12,00,000+", "₹15,00,000+", "₹20,00,000+"];
+
+  // Local state for dropdown selects
+  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedSalary, setSelectedSalary] = useState("");
+
+  // Local state for custom values when 'Other' is chosen
+  const [customRole, setCustomRole] = useState("");
+  const [customLocation, setCustomLocation] = useState("");
+  const [customSalary, setCustomSalary] = useState("");
+
+  // Synchronize database form values to our dropdown options/other fields
+  useEffect(() => {
+    if (form.preferredRoles) {
+      if (roleOptions.includes(form.preferredRoles)) {
+        setSelectedRole(form.preferredRoles);
+        setCustomRole("");
+      } else {
+        setSelectedRole("Other");
+        setCustomRole(form.preferredRoles);
+      }
+    } else {
+      setSelectedRole("");
+      setCustomRole("");
+    }
+
+    if (form.preferredLocations) {
+      if (locationOptions.includes(form.preferredLocations)) {
+        setSelectedLocation(form.preferredLocations);
+        setCustomLocation("");
+      } else {
+        setSelectedLocation("Other");
+        setCustomLocation(form.preferredLocations);
+      }
+    } else {
+      setSelectedLocation("");
+      setCustomLocation("");
+    }
+
+    if (form.salaryExpectations) {
+      if (salaryOptions.includes(form.salaryExpectations)) {
+        setSelectedSalary(form.salaryExpectations);
+        setCustomSalary("");
+      } else {
+        setSelectedSalary("Other");
+        setCustomSalary(form.salaryExpectations);
+      }
+    } else {
+      setSelectedSalary("");
+      setCustomSalary("");
+    }
+  }, [form.preferredRoles, form.preferredLocations, form.salaryExpectations]);
+
+  const handleRoleSelectChange = (e) => {
+    const value = e.target.value;
+    setSelectedRole(value);
+    if (value === "Other") {
+      setForm(prev => ({ ...prev, preferredRoles: customRole }));
+    } else {
+      setForm(prev => ({ ...prev, preferredRoles: value }));
+    }
+  };
+
+  const handleCustomRoleChange = (e) => {
+    const value = e.target.value;
+    setCustomRole(value);
+    setForm(prev => ({ ...prev, preferredRoles: value }));
+  };
+
+  const handleLocationSelectChange = (e) => {
+    const value = e.target.value;
+    setSelectedLocation(value);
+    if (value === "Other") {
+      setForm(prev => ({ ...prev, preferredLocations: customLocation }));
+    } else {
+      setForm(prev => ({ ...prev, preferredLocations: value }));
+    }
+  };
+
+  const handleCustomLocationChange = (e) => {
+    const value = e.target.value;
+    setCustomLocation(value);
+    setForm(prev => ({ ...prev, preferredLocations: value }));
+  };
+
+  const handleSalarySelectChange = (e) => {
+    const value = e.target.value;
+    setSelectedSalary(value);
+    if (value === "Other") {
+      setForm(prev => ({ ...prev, salaryExpectations: customSalary }));
+    } else {
+      setForm(prev => ({ ...prev, salaryExpectations: value }));
+    }
+  };
+
+  const handleCustomSalaryChange = (e) => {
+    const value = e.target.value;
+    setCustomSalary(value);
+    setForm(prev => ({ ...prev, salaryExpectations: value }));
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       const email = localStorage.getItem("userEmail");
@@ -647,27 +752,63 @@ function Profile({
               <div className="half-grid">
                 <div>
                   <label style={labelStyle}>Preferred Job Roles</label>
-                  <input
-                    name="preferredRoles"
-                    placeholder="e.g. React Developer, Backend Engineer"
-                    value={form.preferredRoles || ""}
-                    onChange={handleChange}
-                    style={inputStyle}
-                    onFocus={(e) => e.target.style.borderColor = "#38bdf8"}
-                    onBlur={(e) => e.target.style.borderColor = "#1e293b"}
-                  />
+                  <select
+                    value={selectedRole}
+                    onChange={handleRoleSelectChange}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#070a13",
+                      cursor: "pointer",
+                      marginBottom: selectedRole === "Other" ? "12px" : "0"
+                    }}
+                  >
+                    <option value="">Select Preferred Job Role</option>
+                    {roleOptions.map((role) => (
+                      <option key={role} value={role}>{role}</option>
+                    ))}
+                    <option value="Other">Other (Type custom role)</option>
+                  </select>
+                  {selectedRole === "Other" && (
+                    <input
+                      name="preferredRoles"
+                      placeholder="Type your custom job role..."
+                      value={customRole}
+                      onChange={handleCustomRoleChange}
+                      style={inputStyle}
+                      onFocus={(e) => e.target.style.borderColor = "#38bdf8"}
+                      onBlur={(e) => e.target.style.borderColor = "#1e293b"}
+                    />
+                  )}
                 </div>
                 <div>
                   <label style={labelStyle}>Preferred Locations</label>
-                  <input
-                    name="preferredLocations"
-                    placeholder="e.g. Remote, Bangalore, Delhi"
-                    value={form.preferredLocations || ""}
-                    onChange={handleChange}
-                    style={inputStyle}
-                    onFocus={(e) => e.target.style.borderColor = "#38bdf8"}
-                    onBlur={(e) => e.target.style.borderColor = "#1e293b"}
-                  />
+                  <select
+                    value={selectedLocation}
+                    onChange={handleLocationSelectChange}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#070a13",
+                      cursor: "pointer",
+                      marginBottom: selectedLocation === "Other" ? "12px" : "0"
+                    }}
+                  >
+                    <option value="">Select Preferred Location</option>
+                    {locationOptions.map((loc) => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                    <option value="Other">Other (Type custom location)</option>
+                  </select>
+                  {selectedLocation === "Other" && (
+                    <input
+                      name="preferredLocations"
+                      placeholder="Type your custom location..."
+                      value={customLocation}
+                      onChange={handleCustomLocationChange}
+                      style={inputStyle}
+                      onFocus={(e) => e.target.style.borderColor = "#38bdf8"}
+                      onBlur={(e) => e.target.style.borderColor = "#1e293b"}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -690,16 +831,34 @@ function Profile({
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Annual Salary Expectations</label>
-                  <input
-                    name="salaryExpectations"
-                    placeholder="e.g. ₹6,00,000 - ₹8,00,000"
-                    value={form.salaryExpectations || ""}
-                    onChange={handleChange}
-                    style={inputStyle}
-                    onFocus={(e) => e.target.style.borderColor = "#38bdf8"}
-                    onBlur={(e) => e.target.style.borderColor = "#1e293b"}
-                  />
+                  <label style={labelStyle}>Minimum Salary Expectation</label>
+                  <select
+                    value={selectedSalary}
+                    onChange={handleSalarySelectChange}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#070a13",
+                      cursor: "pointer",
+                      marginBottom: selectedSalary === "Other" ? "12px" : "0"
+                    }}
+                  >
+                    <option value="">Select Minimum Salary</option>
+                    {salaryOptions.map((sal) => (
+                      <option key={sal} value={sal}>{sal}</option>
+                    ))}
+                    <option value="Other">Other (Type custom expectation)</option>
+                  </select>
+                  {selectedSalary === "Other" && (
+                    <input
+                      name="salaryExpectations"
+                      placeholder="Type custom salary expectation (e.g., ₹25,00,000+)..."
+                      value={customSalary}
+                      onChange={handleCustomSalaryChange}
+                      style={inputStyle}
+                      onFocus={(e) => e.target.style.borderColor = "#38bdf8"}
+                      onBlur={(e) => e.target.style.borderColor = "#1e293b"}
+                    />
+                  )}
                 </div>
               </div>
 

@@ -17,7 +17,7 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(BCryptPasswordEncoder.BCryptVersion.$2B, 10);
 
     // ─────────────────────────────────────────────────────────
     // REGISTER
@@ -75,12 +75,14 @@ public class AuthController {
         }
 
         if (matches) {
-            // Login notification — async
+            // Login notification — fire-and-forget async (do NOT await this — it causes login lag)
             String body = "Hello " + existingUser.getName() + ",\n\n"
                 + "You just logged in to your Auto-Intern account.\n\n"
                 + "If this was not you, please reset your password immediately.\n\n"
                 + "Best regards,\nAuto-Intern Team";
-            emailService.sendEmail(existingUser.getEmail(), "Login Notification — Auto-Intern", body);
+            java.util.concurrent.CompletableFuture.runAsync(() -> 
+                emailService.sendEmail(existingUser.getEmail(), "Login Notification — Auto-Intern", body)
+            );
             return "Login Success";
         }
         return "Invalid email or password";

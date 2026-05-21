@@ -64,6 +64,26 @@ function App() {
     }
   };
 
+  const fetchMatchedJobs = async (userId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/match-jobs/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Only update if we received actual jobs — prevents overwriting good data with empty results
+        if (Array.isArray(data) && data.length > 0) {
+          setMatchedJobs(data);
+        } else if (data && data.length === 0) {
+          // Only clear if we've never loaded jobs before
+          setMatchedJobs(prev => prev.length > 0 ? prev : []);
+        }
+      }
+      // If response is not ok, silently retain existing matchedJobs (prevents blank flicker)
+    } catch (error) {
+      console.error("Error fetching matched jobs:", error);
+      // Silently retain existing jobs — never wipe matchedJobs on network failure
+    }
+  };
+
   const loadUserProfile = async (email) => {
     try {
       const response = await fetch(`${API_BASE_URL}/user/email/${email}`);
@@ -87,8 +107,11 @@ function App() {
             salaryExpectations: userObj.salaryExpectations || ""
           });
           if (userObj.id) {
-            await fetchMatchedJobs(userObj.id);
-            await fetchSuggestions(userObj.id);
+            // Run jobs and suggestions in PARALLEL — not sequentially
+            Promise.all([
+              fetchMatchedJobs(userObj.id),
+              fetchSuggestions(userObj.id)
+            ]).catch(err => console.error("Background data fetch error:", err));
           }
         }
       }
@@ -96,6 +119,7 @@ function App() {
       console.error("Error loading user profile on mount:", error);
     }
   };
+
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -104,29 +128,25 @@ function App() {
   };
 
   const fetchUsers = async () => {
-    const response = await fetch(`${API_BASE_URL}/user`);
-    const data = await response.json();
-    setUsers(data);
+    try {
+      const response = await fetch(`${API_BASE_URL}/user`);
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
   };
-  const fetchMatchedJobs = async (userId) => {
-  const response = await fetch(
-    `${API_BASE_URL}/match-jobs/${userId}`
-  );
-
-  const data = await response.json();
-
-  setMatchedJobs(data);
-  };
+  // Load profile ONLY once on app mount — not on every route change.
+  // Route-change re-fetching was the primary cause of app-wide lag.
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
     if (email) {
       loadUserProfile(email);
     }
-  }, [location.pathname]); // Automatically re-sync and load profile when page changes, preventing blank screens on click back!
-
-  useEffect(() => {
     fetchUsers();
-  }, []);
+  }, []); // Empty deps = run once on mount only
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -147,7 +167,6 @@ const handleSubmit = async (e) => {
     }
 
     const savedUser = await response.json();
-    await fetchMatchedJobs(savedUser.id);
 
     // 2. Only upload resume if a new file is chosen
     if (resumeFile) {
@@ -171,8 +190,12 @@ const handleSubmit = async (e) => {
     }
 
     showToast("Profile saved successfully!", "success");
-    await fetchUsers();
-    await fetchSuggestions(savedUser.id);
+    // Run all post-save refreshes in PARALLEL to avoid sequential blocking
+    Promise.all([
+      fetchUsers(),
+      fetchMatchedJobs(savedUser.id),
+      fetchSuggestions(savedUser.id)
+    ]).catch(err => console.error("Background refresh error:", err));
 
     setForm({
       id: savedUser.id,
@@ -246,7 +269,7 @@ const handleSubmit = async (e) => {
         path="/suggestions"
         element={
           <ProtectedRoute>
-            <Suggestions suggestions={suggestions} />
+            <Suggestions suggestions={suggestions} userId={form.id} />
           </ProtectedRoute>
         }
       />
