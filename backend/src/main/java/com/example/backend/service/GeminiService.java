@@ -25,7 +25,7 @@ public class GeminiService {
 
     private static final Logger log = Logger.getLogger(GeminiService.class.getName());
 
-    @Value("${gemini.api.key:NOT_SET}")
+    @Value("${gemini.api.key}")
     private String apiKey;
 
     private static final String MODEL      = "gemini-2.5-flash";
@@ -45,8 +45,8 @@ public class GeminiService {
      * @return        Gemini's text response, or null on failure
      */
     public String generate(String prompt) {
-        if ("NOT_SET".equals(apiKey) || apiKey == null || apiKey.isBlank()) {
-            log.warning("[GEMINI] API key not configured — set GEMINI_API_KEY env variable in Render.");
+        if (apiKey == null || apiKey.isBlank() || apiKey.equals("NOT_SET")) {
+            log.warning("[GEMINI] API key is not configured.");
             return null;
         }
 
