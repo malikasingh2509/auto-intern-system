@@ -79,7 +79,7 @@ public class AIChatController {
         String reply = geminiService.generate(promptBuilder.toString());
         if (reply == null || reply.isBlank()) {
             response.put("success", false);
-            response.put("reply", "I'm currently unable to access my Gemini AI systems. Please check that your GEMINI_API_KEY environment variable is correctly set and valid.");
+            response.put("reply", "⚠️ **AI is temporarily at capacity.**\n\nThe free-tier Gemini API quota has been reached for today. This resets every 24 hours.\n\n**In the meantime you can:**\n- Review your profile settings to improve job matching\n- Check the Matched Jobs page for new opportunities\n- Track your applications in the Application Tracker\n\nPlease try again later — the AI will be back shortly!");
         } else {
             response.put("success", true);
             response.put("reply", reply.trim());
