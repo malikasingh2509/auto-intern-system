@@ -28,7 +28,7 @@ public class GeminiService {
     @Value("${gemini.api.key:NOT_SET}")
     private String apiKey;
 
-    private static final String MODEL      = "gemini-1.5-flash";
+    private static final String MODEL      = "gemini-2.0-flash";
     private static final String GEMINI_URL =
         "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent";
 
