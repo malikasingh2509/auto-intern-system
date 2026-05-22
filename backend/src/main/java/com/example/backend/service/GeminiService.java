@@ -13,10 +13,11 @@ import java.time.Duration;
 import java.util.logging.Logger;
 
 /**
- * Reusable Gemini API client with multi-model fallback.
+ * AI client with multi-provider fallback:
+ * 1. Gemini (Google) — tries multiple models
+ * 2. Groq (free, no daily limits, very fast) — used as fallback
  *
- * Tries models in order until one succeeds. Handles 429 quota errors
- * gracefully by falling through to the next model.
+ * This prevents AI chatbot downtime when Gemini free-tier quota is exhausted.
  */
 @Service
 public class GeminiService {
@@ -24,18 +25,26 @@ public class GeminiService {
     private static final Logger log = Logger.getLogger(GeminiService.class.getName());
 
     @Value("${gemini.api.key}")
-    private String apiKey;
+    private String geminiApiKey;
 
-    // Try models in order — each has different quota pools on free tier
-    private static final String[] MODELS = {
+    @Value("${groq.api.key:NOT_SET}")
+    private String groqApiKey;
+
+    // Gemini models — tried in order, each has separate quota pool
+    private static final String[] GEMINI_MODELS = {
         "gemini-2.0-flash",
         "gemini-2.5-flash",
         "gemini-2.0-flash-lite",
         "gemini-flash-latest"
     };
 
-    private static final String BASE_URL =
+    private static final String GEMINI_BASE =
         "https://generativelanguage.googleapis.com/v1beta/models/";
+
+    // Groq API — free tier, no daily quota limit
+    private static final String GROQ_URL =
+        "https://api.groq.com/openai/v1/chat/completions";
+    private static final String GROQ_MODEL = "llama-3.3-70b-versatile";
 
     private final HttpClient http = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(15))
@@ -44,32 +53,43 @@ public class GeminiService {
     private final ObjectMapper mapper = new ObjectMapper();
 
     /**
-     * Send a plain-text prompt to Gemini.
-     * Tries multiple models until one succeeds.
-     * Returns null only if ALL models fail.
+     * Generate a response from any available AI.
+     * Tries Gemini first (all models), then falls back to Groq.
      */
     public String generate(String prompt) {
-        if (apiKey == null || apiKey.isBlank() || apiKey.equals("NOT_SET")) {
-            log.warning("[GEMINI] API key is not configured.");
-            return null;
+        // 1. Try all Gemini models
+        if (geminiApiKey != null && !geminiApiKey.isBlank() && !geminiApiKey.equals("NOT_SET")) {
+            for (String model : GEMINI_MODELS) {
+                String result = tryGemini(model, prompt);
+                if (result != null) {
+                    log.info("[AI] Gemini success with model: " + model);
+                    return result;
+                }
+            }
+            log.warning("[AI] All Gemini models quota exhausted, trying Groq fallback...");
         }
 
-        for (String model : MODELS) {
-            String result = tryModel(model, prompt);
+        // 2. Fallback to Groq
+        if (!groqApiKey.equals("NOT_SET") && !groqApiKey.isBlank()) {
+            String result = tryGroq(prompt);
             if (result != null) {
-                log.info("[GEMINI] Success with model: " + model);
+                log.info("[AI] Groq fallback success.");
                 return result;
             }
         }
 
-        log.severe("[GEMINI] All models failed or quota exhausted.");
+        log.severe("[AI] All AI providers failed.");
         return null;
     }
 
-    private String tryModel(String model, String prompt) {
+    private String tryGemini(String model, String prompt) {
         try {
-            String url  = BASE_URL + model + ":generateContent?key=" + apiKey;
-            String body = buildRequestBody(prompt);
+            String url  = GEMINI_BASE + model + ":generateContent?key=" + geminiApiKey;
+            String body = mapper.writeValueAsString(mapper.createObjectNode()
+                .set("contents", mapper.createArrayNode()
+                    .add(mapper.createObjectNode()
+                        .set("parts", mapper.createArrayNode()
+                            .add(mapper.createObjectNode().put("text", prompt))))));
 
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -81,48 +101,53 @@ public class GeminiService {
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
-                return extractText(response.body());
+                JsonNode root = mapper.readTree(response.body());
+                return root.path("candidates").get(0)
+                    .path("content").path("parts").get(0)
+                    .path("text").asText(null);
             }
-
-            if (response.statusCode() == 429) {
-                log.warning("[GEMINI] " + model + " quota exhausted (429), trying next model...");
-                return null; // Fall through to next model
-            }
-
-            if (response.statusCode() == 404) {
-                log.warning("[GEMINI] " + model + " not available (404), trying next model...");
-                return null;
-            }
-
-            log.warning("[GEMINI] " + model + " returned HTTP " + response.statusCode());
+            // 429 = quota, 404 = model unavailable, 403 = project restriction
+            log.warning("[AI] Gemini " + model + " HTTP " + response.statusCode());
             return null;
 
         } catch (Exception e) {
-            log.warning("[GEMINI] " + model + " request failed: " + e.getMessage());
+            log.warning("[AI] Gemini " + model + " error: " + e.getMessage());
             return null;
         }
     }
 
-    private String buildRequestBody(String prompt) throws Exception {
-        return mapper.writeValueAsString(mapper.createObjectNode()
-            .set("contents", mapper.createArrayNode()
-                .add(mapper.createObjectNode()
-                    .set("parts", mapper.createArrayNode()
-                        .add(mapper.createObjectNode()
-                            .put("text", prompt))))));
-    }
-
-    private String extractText(String responseBody) {
+    private String tryGroq(String prompt) {
         try {
-            JsonNode root = mapper.readTree(responseBody);
-            return root
-                .path("candidates").get(0)
-                .path("content")
-                .path("parts").get(0)
-                .path("text")
-                .asText(null);
+            // Groq uses OpenAI-compatible chat completions format
+            String body = mapper.writeValueAsString(mapper.createObjectNode()
+                .put("model", GROQ_MODEL)
+                .put("temperature", 0.7)
+                .put("max_tokens", 2048)
+                .set("messages", mapper.createArrayNode()
+                    .add(mapper.createObjectNode()
+                        .put("role", "user")
+                        .put("content", prompt))));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(GROQ_URL))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + groqApiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(Duration.ofSeconds(30))
+                .build();
+
+            HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                JsonNode root = mapper.readTree(response.body());
+                return root.path("choices").get(0)
+                    .path("message").path("content").asText(null);
+            }
+            log.warning("[AI] Groq returned HTTP " + response.statusCode() + ": " + response.body().substring(0, Math.min(200, response.body().length())));
+            return null;
+
         } catch (Exception e) {
-            log.warning("[GEMINI] Failed to parse response: " + e.getMessage());
+            log.warning("[AI] Groq error: " + e.getMessage());
             return null;
         }
     }
