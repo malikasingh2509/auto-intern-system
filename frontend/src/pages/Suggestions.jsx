@@ -6,6 +6,7 @@ function Suggestions({ suggestions, userId }) {
   const [activeView, setActiveView] = useState("chat");
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const chatEndRef = useRef(null);
 
   // Resolve actual userId from prop or localStorage fallback
@@ -141,20 +142,22 @@ function Suggestions({ suggestions, userId }) {
   };
 
   const clearChatHistory = () => {
-    if (window.confirm("Are you sure you want to clear your chat history?")) {
-      const initial = [
-        {
-          id: 1,
-          sender: "ai",
-          text: "👋 **Chat history cleared.**\n\nHow can I help you optimize your profile, review your resume, or draft cover letters today?",
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        }
-      ];
-      setMessages(initial);
-      if (userId) {
-        localStorage.removeItem(`chat_history_${userId}`);
+    setShowClearConfirm(true);
+  };
+
+  const confirmClear = () => {
+    const initial = [
+      {
+        id: 1,
+        sender: "ai",
+        text: "👋 **Chat history cleared.**\n\nHow can I help you optimize your profile, review your resume, or draft cover letters today?",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       }
-    }
+    ];
+    setMessages(initial);
+    const uid = userId || localStorage.getItem("userId");
+    if (uid) localStorage.removeItem(`chat_history_${uid}`);
+    setShowClearConfirm(false);
   };
 
   // Safe and high-fidelity regex-based markdown parser
@@ -323,6 +326,7 @@ function Suggestions({ suggestions, userId }) {
   };
 
   return (
+    <>
     <div style={containerStyle}>
       {/* Header Info Banner */}
       <div style={headerPanelStyle}>
@@ -571,6 +575,121 @@ function Suggestions({ suggestions, userId }) {
         </div>
       )}
     </div>
+
+      {/* ── Clear Session Confirmation Modal ── */}
+      {showClearConfirm && (
+        <div
+          onClick={() => setShowClearConfirm(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.65)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            animation: "fadeIn 0.2s ease"
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: "#0f172a",
+              border: "1px solid #1e293b",
+              borderRadius: "20px",
+              padding: "36px 40px",
+              width: "100%",
+              maxWidth: "420px",
+              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.6)",
+              animation: "slideUp 0.25s ease",
+              textAlign: "center"
+            }}
+          >
+            {/* Icon */}
+            <div style={{
+              width: "60px",
+              height: "60px",
+              borderRadius: "50%",
+              backgroundColor: "rgba(244, 63, 94, 0.12)",
+              border: "1px solid rgba(244, 63, 94, 0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "26px",
+              margin: "0 auto 20px auto"
+            }}>
+              🗑️
+            </div>
+
+            <h3 style={{
+              fontSize: "20px",
+              fontWeight: "800",
+              color: "#ffffff",
+              margin: "0 0 10px 0"
+            }}>
+              Clear Chat History?
+            </h3>
+            <p style={{
+              color: "#94a3b8",
+              fontSize: "14px",
+              lineHeight: "1.6",
+              margin: "0 0 28px 0"
+            }}>
+              This will permanently delete your entire conversation history with the AI Career Coach. This action cannot be undone.
+            </p>
+
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: "12px 20px",
+                  borderRadius: "10px",
+                  border: "1px solid #1e293b",
+                  backgroundColor: "transparent",
+                  color: "#94a3b8",
+                  fontWeight: "700",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseOver={(e) => e.currentTarget.style.borderColor = "#38bdf8"}
+                onMouseOut={(e) => e.currentTarget.style.borderColor = "#1e293b"}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmClear}
+                style={{
+                  flex: 1,
+                  padding: "12px 20px",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor: "#f43f5e",
+                  color: "white",
+                  fontWeight: "700",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  boxShadow: "0 4px 14px -3px rgba(244, 63, 94, 0.4)"
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#e11d48"}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#f43f5e"}
+              >
+                Yes, Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+    </>
   );
 }
 
